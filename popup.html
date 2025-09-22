@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Privacy Monitor</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+            --bg-color: #ecf0f1;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            width: 400px;
+            min-height: 500px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            padding: 15px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--success-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .risk-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .risk-low { background-color: var(--success-color); }
+        .risk-medium { background-color: var(--warning-color); }
+        .risk-high { background-color: var(--danger-color); }
+        
+        .section {
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cookie-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+        }
+        
+        .cookie-item {
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cookie-item:last-child {
+            border-bottom: none;
+        }
+        
+        .cookie-info {
+            flex: 1;
+        }
+        
+        .cookie-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .cookie-domain {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .cookie-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--danger-color);
+            font-size: 12px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            flex: 1;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .sandbox-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        
+        .sandbox-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .add-site {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .add-site input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        
+        .add-site button {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cookie Privacy Monitor</h1>
+            <div class="status-toggle">
+                <span>Monitoring</span>
+                <label class="switch">
+                    <input type="checkbox" id="monitoringToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="tab-navigation">
+            <div class="tab active" data-tab="dashboard">Dashboard</div>
+            <div class="tab" data-tab="sandbox">Sandbox</div>
+        </div>
+        
+        <div class="tab-content active" id="dashboard-tab">
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-value" id="totalCookies">0</div>
+                    <div class="card-label">Total Cookies</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="trackerCookies">0</div>
+                    <div class="card-label">Trackers</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="highRiskCookies">0</div>
+                    <div class="card-label">High Risk</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="recentActivity">0</div>
+                    <div class="card-label">Recent (24h)</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    <span>Recent Cookie Activity</span>
+                </div>
+                <div class="cookie-list" id="recentCookies">
+                    <div class="empty-state">No recent cookie activity</div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-danger" id="clearTrackers">Clear Trackers</button>
+                <button class="btn btn-warning" id="clearAll">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="sandbox-tab">
+            <div class="section">
+                <div class="section-title">Sandboxed Sites</div>
+                <div class="sandbox-list" id="sandboxSites">
+                    <div class="empty-state">No sites in sandbox</div>
+                </div>
+            </div>
+            
+            <div class="add-site">
+                <input type="text" id="newSite" placeholder="Enter domain (e.g., example.com)">
+                <button id="addSite">Add</button>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Sandbox Benefits</div>
+                <ul style="font-size: 12px; padding-left: 20px; color: #7f8c8d;">
+                    <li>Prevents cross-site tracking</li>
+                    <li>Isolates cookies from other sites</li>
+                    <li>Automatically clears third-party cookies</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
